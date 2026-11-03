@@ -1,0 +1,25 @@
+# Builds a WebAssembly (Pyodide) wheel of pdb_cpp and imports it in Pyodide to check it works.
+name: Pyodide wheel
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main, master]
+
+jobs:
+  pyodide:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pypa/cibuildwheel@v3.2.1
+        env:
+          CIBW_PLATFORM: pyodide
+          CIBW_TEST_COMMAND: >-
+            python -c "import pdb_cpp, pdb_cpp.core, numpy as np;
+            from pdb_cpp.geom import distance_matrix;
+            a = np.zeros((2, 3), dtype=np.float32);
+            print('pdb_cpp OK, distance_matrix:', distance_matrix(a, a + 1))"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: pdb_cpp-pyodide-wheel
+          path: wheelhouse/*.whl
