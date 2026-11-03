@@ -13,7 +13,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Get af_analysis source + test data
-        run: git clone --depth 1 https://github.com/samuelmurail/af_analysis /tmp/afa
+        run: git clone --depth 1 https://github.com/samuelmurail/af_analysis afa
       - uses: pypa/cibuildwheel@v3.2.1
         env:
           CIBW_PLATFORM: pyodide
