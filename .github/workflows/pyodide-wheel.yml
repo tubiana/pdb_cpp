@@ -19,15 +19,7 @@ jobs:
           CIBW_PLATFORM: pyodide
           # pure-python / Pyodide-provided deps only (no MDAnalysis, no nglview)
           CIBW_TEST_REQUIRES: pandas seaborn matplotlib tqdm cmcrameri ipywidgets
-          CIBW_TEST_COMMAND: >-
-            PYTHONPATH=/tmp/afa/src python -c "
-            import af_analysis;
-            from af_analysis import analysis;
-            d = af_analysis.Data('/tmp/afa/tests/inputs/beta_amyloid_dimer_cf_1.5.5');
-            print('format:', d.format, '| models:', len(d.df));
-            analysis.pdockq(d); analysis.pdockq2(d);
-            print(d.df.filter(regex='query|rank|plddt|pdockq').head());
-            print('AF_ANALYSIS RUNS IN PYODIDE')"
+          CIBW_TEST_COMMAND: PYTHONPATH=/tmp/afa/src python {project}/.github/pyodide_smoke_test.py
       - uses: actions/upload-artifact@v4
         with:
           name: pdb_cpp-pyodide-wheel
