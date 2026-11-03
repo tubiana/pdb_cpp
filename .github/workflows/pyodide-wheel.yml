@@ -1,4 +1,5 @@
-# Builds a WebAssembly (Pyodide) wheel of pdb_cpp and imports it in Pyodide to check it works.
+# Builds a WebAssembly (Pyodide) wheel of pdb_cpp, then runs a real af_analysis
+# analysis (ColabFold test data from af_analysis's repo) inside Pyodide.
 name: Pyodide wheel
 
 on:
@@ -11,14 +12,22 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: Get af_analysis source + test data
+        run: git clone --depth 1 https://github.com/samuelmurail/af_analysis /tmp/afa
       - uses: pypa/cibuildwheel@v3.2.1
         env:
           CIBW_PLATFORM: pyodide
+          # pure-python / Pyodide-provided deps only (no MDAnalysis, no nglview)
+          CIBW_TEST_REQUIRES: pandas seaborn matplotlib tqdm cmcrameri ipywidgets
           CIBW_TEST_COMMAND: >-
-            python -c "import pdb_cpp, pdb_cpp.core, numpy as np;
-            from pdb_cpp.geom import distance_matrix;
-            a = np.zeros((2, 3), dtype=np.float32);
-            print('pdb_cpp OK, distance_matrix:', distance_matrix(a, a + 1))"
+            PYTHONPATH=/tmp/afa/src python -c "
+            import af_analysis;
+            from af_analysis import analysis;
+            d = af_analysis.Data('/tmp/afa/tests/inputs/beta_amyloid_dimer_cf_1.5.5');
+            print('format:', d.format, '| models:', len(d.df));
+            analysis.pdockq(d); analysis.pdockq2(d);
+            print(d.df.filter(regex='query|rank|plddt|pdockq').head());
+            print('AF_ANALYSIS RUNS IN PYODIDE')"
       - uses: actions/upload-artifact@v4
         with:
           name: pdb_cpp-pyodide-wheel
